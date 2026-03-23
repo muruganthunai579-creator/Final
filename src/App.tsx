@@ -5,7 +5,7 @@
 
 import React, { useState, useRef } from 'react';
 import { GoogleGenAI } from "@google/genai";
-import { Upload, Image as ImageIcon, Trophy, Loader2, AlertCircle, CheckCircle2, Languages, Star, Sparkles, ArrowRight, Settings, X, Key } from 'lucide-react';
+import { Upload, Image as ImageIcon, Trophy, Loader2, AlertCircle, CheckCircle2, Languages, Star, Sparkles, ArrowRight, Settings, X, Key, Copy, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 // Initialize Free API
@@ -71,7 +71,9 @@ const TRANSLATIONS = {
     apiKeyHelp: "Your key is saved locally in your browser.",
     keyStatus: "API Key Status",
     keyFound: "Key Found",
-    keyMissing: "Key Missing"
+    keyMissing: "Key Missing",
+    copy: "Copy",
+    copied: "Copied!"
   },
   ta: {
     title: "ஜோதிட கணிப்பு",
@@ -103,7 +105,9 @@ const TRANSLATIONS = {
     apiKeyHelp: "உங்கள் Key உங்கள் உலாவியில் (Browser) பாதுகாப்பாகச் சேமிக்கப்படும்.",
     keyStatus: "API Key நிலை",
     keyFound: "Key உள்ளது",
-    keyMissing: "Key இல்லை"
+    keyMissing: "Key இல்லை",
+    copy: "நகலெடு",
+    copied: "நகலெடுக்கப்பட்டது!"
   }
 };
 
@@ -117,9 +121,21 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [manualApiKey, setManualApiKey] = useState(() => localStorage.getItem('gemini_api_key') || '');
   const [showSettings, setShowSettings] = useState(false);
+  const [copied, setCopied] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const t = TRANSLATIONS[lang];
+
+  const handleCopy = async () => {
+    if (!manualApiKey) return;
+    try {
+      await navigator.clipboard.writeText(manualApiKey);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy:", err);
+    }
+  };
 
   const saveApiKey = (key: string) => {
     localStorage.setItem('gemini_api_key', key);
@@ -328,15 +344,28 @@ export default function App() {
                     <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-[#B8860B] mb-3">
                       {t.apiKeyLabel}
                     </label>
-                    <div className="relative">
+                    <div className="relative group">
                       <Key className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#B8860B]" />
                       <input
                         type="password"
                         value={manualApiKey}
                         onChange={(e) => setManualApiKey(e.target.value)}
                         placeholder={t.apiKeyPlaceholder}
-                        className="w-full pl-14 pr-5 py-5 bg-[#F5F2ED] border-2 border-transparent focus:border-[#B8860B] rounded-3xl outline-none transition-all text-sm font-mono"
+                        className="w-full pl-14 pr-14 py-5 bg-[#F5F2ED] border-2 border-transparent focus:border-[#B8860B] rounded-3xl outline-none transition-all text-sm font-mono"
                       />
+                      {manualApiKey && (
+                        <button
+                          onClick={handleCopy}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 p-2 hover:bg-white rounded-xl transition-all flex items-center gap-2"
+                          title={t.copy}
+                        >
+                          {copied ? (
+                            <Check className="w-4 h-4 text-green-600" />
+                          ) : (
+                            <Copy className="w-4 h-4 text-[#B8860B]" />
+                          )}
+                        </button>
+                      )}
                     </div>
                     <p className="mt-3 text-[10px] text-gray-500 italic leading-relaxed">
                       {t.apiKeyHelp}
